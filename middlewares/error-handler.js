@@ -17,11 +17,22 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   //   return res.status(err.statusCode).json({ msg: err.message });
   // }
 
+  if (err.name === 'ValidationError') {
+    console.log('err: ', Object.values(err));
+    console.log('err.errors: ', Object.values(err.errors));
+    customError.msg = Object.values(err.errors).map((item) => item.message).join(' ');
+    customError.statusCode = StatusCodes.BAD_REQUEST;
+  }
+
+  if (err.name === 'CastError') {
+    customError.msg = `No item found with ID ${err.value}`;
+    customError.statusCode = StatusCodes.NOT_FOUND;
+  }
+
   if (err.code && err.code === 11000) {
     customError.msg = `Duplicate value entered for ${Object.keys(err.keyValue)} field. Please enter new value.`;
     customError.statusCode = StatusCodes.BAD_REQUEST;
   }
-  // return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ err });
   return res.status(customError.statusCode).send({ msg: customError.msg });
 };
 
